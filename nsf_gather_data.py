@@ -10,7 +10,7 @@ This script parse data from xml files and put them into csv files by year
 from os import listdir
 from bs4 import BeautifulSoup
 import pandas as pd
-
+import re
 
 tag_list=['AwardTitle','AwardEffectiveDate','AwardExpirationDate','AwardAmount',
           'AwardInstrument','Directorate','Division','ProgramOfficer','AbstractNarration',
@@ -35,7 +35,7 @@ def add_to_dict_unbounded(record,unbounded,soup):
     return record
 
 def from_xml(xml_dir):
-    with open(xml_dir) as fp:
+    with open(xml_dir, encoding="utf-8") as fp:
         soup = BeautifulSoup(fp,'xml')
     record = {}   
     for tag_name in tag_list:
@@ -57,9 +57,26 @@ def from_folder(folder):
             print(folder+xml_dir)
     df = pd.DataFrame(all_records)
     df.to_csv(folder[:-1]+'.csv',index=False)
-
+    
+def from_folder_fix(folder):
+    df = pd.read_csv(folder[:-1]+'.csv', dtype=str, encoding="ISO-8859-1")
+    all_records = []
+    for xml_dir in listdir(folder):
+        if re.match('\d+',xml_dir)[0] in df.AwardID.values:
+            continue
+        try:
+            record = from_xml(folder+xml_dir)
+            all_records.append(record)
+            print(folder+xml_dir)
+        except: 
+            print(folder+xml_dir)
+    df_fix = pd.DataFrame(all_records)
+    df = pd.concat([df, df_fix],ignore_index=True)
+    df.to_csv(folder[:-1]+'.csv',index=False)
+   
 for yr in range(1977,2018):
     folder = 'C:\\Users\\Xiaojun\\Documents\\PYTHON\\NSF\\'+str(yr)+'\\'
     print('Getting '+str(yr)+'...')
     from_folder(folder)
+#    from_folder_fix(folder)
     print(str(yr)+' done.')
