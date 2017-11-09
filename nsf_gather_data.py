@@ -25,7 +25,7 @@ def add_to_dict(record,tag,key=None):
     record[key]=val
     return record
 
-def add_to_dict_unbounded(record,unbounded):
+def add_to_dict_unbounded(record,unbounded,soup):
     tags = soup.find_all(unbounded)
     val=[]
     if tags:
@@ -44,7 +44,7 @@ def from_xml(xml_dir):
     record = add_to_dict(record,soup.Code,key='OrganizationCode')
     record = add_to_dict(record,soup.Name,key='Institution')
     for unbounded in unbounded_list:
-        record = add_to_dict_unbounded(record,unbounded)   
+        record = add_to_dict_unbounded(record,unbounded,soup)   
     return record
         
 def from_folder(folder):
@@ -52,9 +52,9 @@ def from_folder(folder):
     for xml_dir in listdir(folder):
         try:
             record = from_xml(folder+xml_dir)
+            all_records.append(record)
         except: 
             print(folder+xml_dir)
-        all_records.append(record)
     df = pd.DataFrame(all_records)
     df.to_csv(folder[:-1]+'.csv',index=False)
 
